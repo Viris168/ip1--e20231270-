@@ -22,3 +22,10 @@ Asked: scaffold NestJS modular backend with JWT auth guard and Vue 3 Pinia auth 
 Kept: NestJS modules (Auth, Application, Review, Prisma) and Vue Router beforeEach route guard logic
 Rejected: storing JWT tokens directly in localStorage without expiration check; kept in reactive Pinia store with validated expiration
 Checked by: verified route redirection for unauthenticated access and test requests with curl
+
+## 2026-10-30 · Static Vue 3 Prototype & Check 1 Finalization
+Tool: Antigravity
+Asked: scaffold Vue 3 + TypeScript + Vite frontend with static mock screens matching SPEC.md and wireframes for Check 1
+Kept: Vue Router routes, Pinia stores with mock state, component styling, responsive layout, Vitest specs
+Rejected: heavy CSS component libraries; implemented clean semantic custom CSS to ensure fast load and full maintainability
+Checked by: verified compilation with vue-tsc, built production bundle with vite build, and ran unit tests with vitest
