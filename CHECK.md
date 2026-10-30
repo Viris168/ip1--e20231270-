@@ -2,17 +2,20 @@
 
 ## Check 1 (Week 4)
 
-Tag: `check-1` Commit: `<commit-hash>`
+Tag: `check-1` Commit: `7ff7d7d`
 
 ### Done (copy the checklist, tick what works)
-- [x] Sections 1–4 of SRS / SPEC.md completed with all functional requirements
-- [x] 5 wireframe mockups generated in `docs/wireframes/`
-- [x] Project repository skeleton established matching `ip1-<student-id>` guidelines
-- [x] Static Vue 3 screens prototyped for Login/Register, Dashboard, Detail, Form, and 404
+- [x] docs/SPEC.md: 6–10 user stories with acceptance criteria, at least 2 roles
+- [x] Wireframes for the main screens in docs/wireframes/
+- [x] frontend/ runs with npm run dev from a fresh clone
+- [x] First static screens built from the spec (no real data yet)
+- [x] AI_LOG.md and DECISIONS.md have real entries
+- [x] Small commits with meaningful messages, tag check-1 pushed
 
 ### AI use this period (2-3 main AI_LOG entries)
 - 2026-10-25 · Specification and Data Model Design
 - 2026-10-28 · Repository Structure & Wireframes Setup
+- 2026-10-30 · Static Vue 3 Prototype & Check 1 Finalization
 
 ### One decision I made and why
 - Used auto-increment integer IDs for all entity primary keys instead of UUIDs or composite keys to ensure clear and clean REST resource paths (`/applications/:id`).
