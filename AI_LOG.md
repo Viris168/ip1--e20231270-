@@ -29,3 +29,11 @@ Asked: scaffold Vue 3 + TypeScript + Vite frontend with static mock screens matc
 Kept: Vue Router routes, Pinia stores with mock state, component styling, responsive layout, Vitest specs
 Rejected: heavy CSS component libraries; implemented clean semantic custom CSS to ensure fast load and full maintainability
 Checked by: verified compilation with vue-tsc, built production bundle with vite build, and ran unit tests with vitest
+
+## 2026-10-31 · M0 Proposal & Milestones Alignment
+Tool: Antigravity
+Asked: align project documentation with official course syllabus milestones, generating PROPOSAL.md (Appendix A) and MILESTONES.md
+Kept: exact Appendix A template format, 2-sentence problem statement, MVP user stories, and M0 design question response
+Rejected: keeping only the custom CHECK.md; maintained both to ensure 100% compliance with course evaluation rubric
+Checked by: verified all M0 checklist items against Project Guideline.docx and validated git status
+
