@@ -1,48 +1,68 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { ref, computed, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useApplicationStore } from '@/stores/applications';
 import StatusBadge from '@/components/StatusBadge.vue';
+import LoadingState from '@/components/LoadingState.vue';
+import ErrorState from '@/components/ErrorState.vue';
 import type { ReviewDecision } from '@/types';
 
 const route = useRoute();
-const router = useRouter();
 const authStore = useAuthStore();
 const appStore = useApplicationStore();
 
 const applicationId = computed(() => Number(route.params.id));
-const application = computed(() => appStore.getById(applicationId.value));
+const application = computed(() => appStore.current);
+const notFound = computed(() => Number.isNaN(applicationId.value) || appStore.errorStatus === 404);
 
-// Advisor review submission state
+function load() {
+  if (Number.isNaN(applicationId.value)) return;
+  appStore.fetchById(applicationId.value);
+}
+
+// Re-fetch when the :id param changes (e.g. navigating between two detail pages)
+watch(applicationId, load, { immediate: true });
+
+// Review form state is local: it is only meaningful while this form is on screen
 const reviewDecision = ref<ReviewDecision>('APPROVED');
 const reviewComment = ref('');
 const reviewError = ref('');
 const reviewSuccess = ref('');
+const submittingReview = ref(false);
 
-function handleSubmitReview() {
+async function handleSubmitReview() {
   reviewError.value = '';
   reviewSuccess.value = '';
 
-  if (!reviewComment.value.trim() || reviewComment.value.trim().length < 10) {
+  if (reviewComment.value.trim().length < 10) {
     reviewError.value = 'Review comment must be at least 10 characters.';
     return;
   }
 
-  const added = appStore.addReview(applicationId.value, reviewComment.value.trim(), reviewDecision.value);
-  if (added) {
+  submittingReview.value = true;
+  try {
+    await appStore.addReview(applicationId.value, reviewComment.value.trim(), reviewDecision.value);
     reviewSuccess.value = 'Review submitted successfully and application status updated.';
     reviewComment.value = '';
+  } catch (e) {
+    reviewError.value = e instanceof Error ? e.message : 'Could not submit the review.';
+  } finally {
+    submittingReview.value = false;
   }
 }
 </script>
 
 <template>
-  <div v-if="!application" style="text-align: center; padding: 4rem 1rem;">
+  <LoadingState v-if="appStore.loading" message="Loading application..." />
+
+  <div v-else-if="notFound" style="text-align: center; padding: 4rem 1rem;">
     <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">Application Not Found</h2>
     <p style="color: var(--text-muted); margin-bottom: 1.5rem;">The requested internship application could not be located.</p>
     <router-link to="/dashboard" class="btn btn-primary">Return to Dashboard</router-link>
   </div>
+
+  <ErrorState v-else-if="appStore.error || !application" :message="appStore.error ?? 'Unknown error.'" @retry="load" />
 
   <div v-else style="max-width: 850px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.75rem;">
     <!-- Top Action Bar -->
@@ -170,8 +190,8 @@ function handleSubmitReview() {
             ></textarea>
           </div>
 
-          <button type="submit" class="btn btn-primary">
-            Submit Review
+          <button type="submit" class="btn btn-primary" :disabled="submittingReview">
+            {{ submittingReview ? 'Submitting...' : 'Submit Review' }}
           </button>
         </form>
       </div>

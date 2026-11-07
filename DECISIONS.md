@@ -7,3 +7,4 @@ One line per real design choice.
 - 2026-10-26: Pinia instead of Vuex: idiomatic TypeScript typing, zero mutation boilerplate, and lightweight store composition
 - 2026-10-28: JWT stateless authentication: decoupled REST API communication with Bearer token authorization
 - 2026-10-30: HTTP 404 instead of 403 on student cross-access: strict IDOR mitigation to prevent resource enumeration
+- 2026-11-07: json-server mock behind a Vite `/api` proxy and a service layer: views/stores stay unchanged when the real API replaces the mock in M3

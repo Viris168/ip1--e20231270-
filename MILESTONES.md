@@ -32,16 +32,27 @@ I cut **Story 8 (Offer letter / internship agreement PDF upload)** from the MVP 
 Git Tag: `m1`
 
 ### Checklist
-- [ ] Wireframes (photo or tool) of the main screens in `docs/`
-- [ ] Vue 3 + TypeScript app created with Vite; strict mode on; ESLint passes
-- [ ] At least 4 routes, including a detail page with a route parameter
-- [ ] At least one form with client-side validation
-- [ ] A Pinia store and a service layer calling a mock API (json-server or local JSON)
-- [ ] Loading, empty and error states visible
+- [x] Wireframes (photo or tool) of the main screens in `docs/` — `docs/wireframes/*.png`
+- [x] Vue 3 + TypeScript app created with Vite; strict mode on; ESLint passes — `"strict": true` in `tsconfig.json`, `npm run lint` (flat config in `eslint.config.js`)
+- [x] At least 4 routes, including a detail page with a route parameter — `/login`, `/register`, `/dashboard`, `/applications/new`, `/applications/:id`, `/applications/:id/edit`, 404
+- [x] At least one form with client-side validation — application form (per-field errors, end date after start date), review form, login/register
+- [x] A Pinia store and a service layer calling a mock API (json-server or local JSON) — `stores/applications.ts` → `services/applications.service.ts` → `services/http.ts` → json-server (`mock/db.json`)
+- [x] Loading, empty and error states visible — `LoadingState`, `EmptyState`, `ErrorState` (with retry) on dashboard, detail and edit pages; 404 page for unknown IDs
 
 ### Explain your design
 **What state lives in the store and what stays inside a component? Why?**
-*(To be completed during M1)*
+
+**In the store (`stores/applications.ts`, `stores/auth.ts`):**
+- The applications loaded from the API (`applications`, `current`) and the request status (`loading`, `error`, `errorStatus`). Several screens use the same data: the dashboard list and stats, the detail page and the edit form. Keeping one copy means a change on one screen (creating, editing or deleting an application, or posting a review) shows up everywhere, and no screen holds an out-of-date version.
+- The dashboard filters (`searchQuery`, `statusFilter`). They live in the store so the user's search is still there after opening a detail page and pressing "Back".
+- The logged-in user and role (`auth` store). The navbar, the dashboard, the detail page and later the route guards all need it.
+- Derived values (`filteredApplications`, `stats`) are `computed` in the store, so every view gets the same counts.
+
+**Inside the component:**
+- Form fields and their validation errors (`ApplicationFormView`, review form, login/register). They are a draft. Until the user submits, the rest of the app should not see half-typed values, and leaving the page should discard them.
+- UI-only flags such as `submitting`, success and error messages, and the dashboard's `currentPage`. Only that one screen needs them, and they should reset when the user comes back.
+
+**Rule I followed:** if more than one screen needs the data, or it must outlive the component, it goes in the store. Otherwise it stays local. Components never call `fetch` directly; they call store actions, which use the service layer. When the NestJS API replaces json-server in M3, only `services/` changes.
 
 ---
 

@@ -42,6 +42,8 @@ npm run dev
 ```
 Frontend runs at: `http://localhost:5173`
 
+During M1 `npm run dev` starts both Vite and a json-server mock API (`frontend/mock/db.json`, port 3001, 400 ms simulated latency). Vite proxies `/api/*` to it. Other scripts: `npm run lint`, `npm test`, `npm run build`.
+
 ---
 
 ## Features

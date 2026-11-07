@@ -4,9 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -k -n mock,vite -c magenta,cyan \"npm:mock\" \"vite\"",
+    "dev:vite": "vite",
+    "mock": "json-server --watch mock/db.json --port 3001 --delay 400",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
+    "lint": "eslint .",
     "test": "vitest run"
   },
   "dependencies": {
@@ -17,9 +20,15 @@
   "devDependencies": {
     "@types/node": "^22.13.0",
     "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/eslint-config-typescript": "^14.9.0",
     "@vue/test-utils": "^2.4.6",
+    "concurrently": "^9.2.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-vue": "^9.33.0",
     "jsdom": "^26.0.0",
+    "json-server": "^0.17.4",
     "typescript": "~5.6.3",
+    "typescript-eslint": "^8.72.1",
     "vite": "^5.4.11",
     "vitest": "^2.1.8",
     "vue-tsc": "^2.1.10"

@@ -62,6 +62,10 @@ jobs:
         working-directory: ./frontend
         run: npm ci || npm install
 
+      - name: Lint Frontend
+        working-directory: ./frontend
+        run: npm run lint
+
       - name: Run Frontend Tests
         working-directory: ./frontend
         run: npm test -- --run || true
