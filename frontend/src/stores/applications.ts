@@ -17,6 +17,7 @@ export const useApplicationStore = defineStore('applications', () => {
   // Dashboard filters survive navigating to a detail page and back
   const searchQuery = ref('');
   const statusFilter = ref<ApplicationStatus | 'ALL'>('ALL');
+  const viewMode = ref<'table' | 'cards'>('table');
 
   const filteredApplications = computed(() => {
     const query = searchQuery.value.trim().toLowerCase();
@@ -127,6 +128,7 @@ export const useApplicationStore = defineStore('applications', () => {
     errorStatus,
     searchQuery,
     statusFilter,
+    viewMode,
     filteredApplications,
     stats,
     fetchAll,

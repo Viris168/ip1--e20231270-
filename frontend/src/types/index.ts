@@ -5,6 +5,7 @@ export type ApplicationStatus =
   | 'APPLIED'
   | 'INTERVIEWING'
   | 'OFFERED'
+  | 'NEEDS_CHANGES'
   | 'APPROVED'
   | 'REJECTED';
 

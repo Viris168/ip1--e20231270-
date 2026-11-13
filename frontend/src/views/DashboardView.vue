@@ -6,7 +6,8 @@ import StatusBadge from '@/components/StatusBadge.vue';
 import LoadingState from '@/components/LoadingState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import EmptyState from '@/components/EmptyState.vue';
-import type { InternshipApplication } from '@/types';
+import StatusFilter from '@/components/StatusFilter.vue';
+import type { InternshipApplication, ApplicationStatus } from '@/types';
 
 const authStore = useAuthStore();
 const appStore = useApplicationStore();
@@ -35,6 +36,18 @@ const roleFilteredList = computed(() => {
     );
   }
   return appStore.filteredApplications;
+});
+
+// How many of this user's applications sit in each status, shown beside each filter option
+const statusCounts = computed(() => {
+  const mine = authStore.isStudent
+    ? appStore.applications.filter((app) => app.studentId === authStore.currentUser?.id)
+    : appStore.applications;
+  const counts = { ALL: mine.length } as Record<ApplicationStatus | 'ALL', number>;
+  for (const status of ['DRAFT', 'APPLIED', 'INTERVIEWING', 'OFFERED', 'NEEDS_CHANGES', 'APPROVED', 'REJECTED'] as ApplicationStatus[]) {
+    counts[status] = mine.filter((app) => app.status === status).length;
+  }
+  return counts;
 });
 
 const totalPages = computed(() => {
@@ -161,21 +174,89 @@ async function handleDelete(id: number) {
             />
           </div>
           <div style="flex: 1; min-width: 180px;">
-            <select v-model="appStore.statusFilter" class="form-select">
-              <option value="ALL">All Statuses</option>
-              <option value="DRAFT">Draft</option>
-              <option value="APPLIED">Applied</option>
-              <option value="INTERVIEWING">Interviewing</option>
-              <option value="OFFERED">Offered</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
-            </select>
+            <StatusFilter v-model="appStore.statusFilter" :counts="statusCounts" />
+          </div>
+          <div class="view-toggle" role="group" aria-label="Choose how to display applications">
+            <button
+              type="button"
+              :class="['view-toggle-btn', { active: appStore.viewMode === 'table' }]"
+              :aria-pressed="appStore.viewMode === 'table'"
+              @click="appStore.viewMode = 'table'"
+            >
+              Table
+            </button>
+            <button
+              type="button"
+              :class="['view-toggle-btn', { active: appStore.viewMode === 'cards' }]"
+              :aria-pressed="appStore.viewMode === 'cards'"
+              @click="appStore.viewMode = 'cards'"
+            >
+              Cards
+            </button>
           </div>
         </div>
       </div>
 
+      <!-- Applications Cards -->
+      <div v-if="appStore.viewMode === 'cards'">
+        <div v-if="paginatedList.length === 0" class="card" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+          No applications found matching your criteria.
+        </div>
+        <div v-else class="app-cards">
+          <article v-for="app in paginatedList" :key="app.id" class="app-card">
+            <header class="app-card-head">
+              <div style="min-width: 0;">
+                <h3 class="app-card-company">{{ app.companyName }}</h3>
+                <p class="app-card-position">{{ app.positionTitle }}</p>
+              </div>
+              <StatusBadge :status="app.status" />
+            </header>
+
+            <dl class="app-card-facts">
+              <div v-if="authStore.isAdvisor">
+                <dt>Student</dt>
+                <dd>{{ app.studentName || 'Student #' + app.studentId }}</dd>
+              </div>
+              <div>
+                <dt>Location</dt>
+                <dd>{{ app.location }}</dd>
+              </div>
+              <div>
+                <dt>Stipend</dt>
+                <dd>{{ app.stipend ? '$' + app.stipend + '/mo' : 'Unpaid' }}</dd>
+              </div>
+              <div>
+                <dt>Dates</dt>
+                <dd>{{ app.startDate }} → {{ app.endDate }}</dd>
+              </div>
+            </dl>
+
+            <footer class="app-card-actions">
+              <router-link :to="'/applications/' + app.id" class="btn btn-secondary btn-sm">
+                View
+              </router-link>
+              <router-link
+                v-if="canEdit(app)"
+                :to="'/applications/' + app.id + '/edit'"
+                class="btn btn-secondary btn-sm"
+              >
+                Edit
+              </router-link>
+              <button
+                v-if="canDelete(app)"
+                type="button"
+                class="btn btn-danger btn-sm"
+                @click="handleDelete(app.id)"
+              >
+                Delete
+              </button>
+            </footer>
+          </article>
+        </div>
+      </div>
+
       <!-- Applications Table -->
-      <div class="table-wrapper">
+      <div v-else class="table-wrapper">
         <table class="data-table">
           <thead>
             <tr>
