@@ -17,8 +17,8 @@ This document defines the system requirements for the **Student Internship Track
 
 ### 1.2 Scope
 The Student Internship Tracker provides the following high-level capabilities:
-- **For Students**: Register an account, log internship applications (company, position, dates, stipend), track application status through a defined lifecycle (`DRAFT` → `APPLIED` → `INTERVIEWING` → `OFFERED` → `APPROVED` / `REJECTED`), and view advisor feedback.
-- **For Advisors**: Browse all student applications across the department, post review comments, and issue formal decisions (`PENDING`, `NEEDS_CHANGES`, `APPROVED`, or `REJECTED`) that update application status.
+- **For Students**: Register an account, log internship applications (company, position, dates, stipend), track application status through a defined lifecycle (`DRAFT` → `APPLIED` → `INTERVIEWING` → `OFFERED` → `APPROVED` / `REJECTED`, with `NEEDS_CHANGES` when the advisor asks for corrections), and view advisor feedback.
+- **For Advisors**: Browse all student applications across the department, post review comments, and issue formal decisions (`APPROVED`, `REJECTED`, or `NEEDS_CHANGES`) that update application status.
 
 The system does **not** cover:
 - Direct communication with external companies or job boards.
@@ -91,16 +91,16 @@ The Student Internship Tracker is a standalone, self-contained web application c
 | **FR-APP-04** | An advisor shall be able to view a paginated list of all student applications. |
 | **FR-APP-05** | Both students and advisors shall be able to search applications by `companyName` or `positionTitle` (case-insensitive partial match). |
 | **FR-APP-06** | Both students and advisors shall be able to filter the application list by status. |
-| **FR-APP-07** | A student shall be able to update their own application details, provided the application status is not `APPROVED`. |
+| **FR-APP-07** | A student shall be able to update their own application details, provided the application status is not `APPROVED` or `REJECTED`. Saving an application in `NEEDS_CHANGES` resubmits it (status becomes `APPLIED`). |
 | **FR-APP-08** | A student shall be able to delete their own application only if it is in `DRAFT` or `APPLIED` status and has no associated advisor reviews. |
 | **FR-APP-09** | Pagination shall default to 5 items per page and return `totalItems`, `totalPages`, and `currentPage` in the response metadata. |
 
 ### 3.3 Advisor Review & Approval
 | ID | Requirement |
 | :--- | :--- |
-| **FR-REV-01** | An advisor shall be able to create a review for any student's application, providing a comment and a decision (`PENDING`, `NEEDS_CHANGES`, `APPROVED`, `REJECTED`). |
+| **FR-REV-01** | An advisor shall be able to create a review for any student's application, providing a comment and a decision (`APPROVED`, `REJECTED`, `NEEDS_CHANGES`). Only applications in `APPLIED`, `INTERVIEWING` or `OFFERED` can be reviewed. |
 | **FR-REV-02** | When a review with decision `APPROVED` is submitted, the parent application's status shall be atomically updated to `APPROVED` within the same database transaction. |
-| **FR-REV-03** | When a review with decision `REJECTED` is submitted, the parent application's status shall be atomically updated to `REJECTED`. |
+| **FR-REV-03** | When a review with decision `REJECTED` or `NEEDS_CHANGES` is submitted, the parent application's status shall be atomically updated to the same value. |
 | **FR-REV-04** | Reviews shall be displayed chronologically (oldest first) beneath the application detail view, forming a feedback thread. |
 | **FR-REV-05** | Only users with the `ADVISOR` role may create reviews; `STUDENT` attempts shall return HTTP 403 Forbidden. |
 
@@ -194,7 +194,7 @@ USER ──(1:N)──▶ APPLICATION ──(1:N)──▶ REVIEW ◀──(N:1)
 | `positionTitle` | String | Not Null, Min 2 chars | Internship position title |
 | `location` | String | Not Null | Office location or "Remote" |
 | `stipend` | Float | Nullable | Monthly stipend amount (USD) |
-| `status` | Enum | Default: `DRAFT` | `DRAFT` \| `APPLIED` \| `INTERVIEWING` \| `OFFERED` \| `APPROVED` \| `REJECTED` |
+| `status` | Enum | Default: `DRAFT` | `DRAFT` \| `APPLIED` \| `INTERVIEWING` \| `OFFERED` \| `NEEDS_CHANGES` \| `APPROVED` \| `REJECTED` |
 | `startDate` | DateTime | Not Null | Internship start date |
 | `endDate` | DateTime | Not Null, > startDate | Internship end date |
 | `createdAt` | DateTime | Default: `now()` | Record creation timestamp |
@@ -207,7 +207,7 @@ USER ──(1:N)──▶ APPLICATION ──(1:N)──▶ REVIEW ◀──(N:1)
 | `applicationId` | Int | FK → Application.id, Not Null | Reviewed application |
 | `advisorId` | Int | FK → User.id, Not Null | Reviewing advisor |
 | `comment` | String | Not Null, Min 10 chars | Advisor feedback text |
-| `decision` | Enum | Not Null | `PENDING` \| `NEEDS_CHANGES` \| `APPROVED` \| `REJECTED` |
+| `decision` | Enum | Not Null | `APPROVED` \| `REJECTED` \| `NEEDS_CHANGES` |
 | `createdAt` | DateTime | Default: `now()` | Review submission timestamp |
 
 ### 6.5 Relationship Summary
@@ -222,14 +222,18 @@ stateDiagram-v2
     DRAFT --> APPLIED : Student submits
     APPLIED --> INTERVIEWING : Student updates
     INTERVIEWING --> OFFERED : Student updates
-    OFFERED --> APPROVED : Advisor approves
-    OFFERED --> REJECTED : Advisor rejects
-    APPLIED --> APPROVED : Advisor approves directly
-    APPLIED --> REJECTED : Advisor rejects
-    APPLIED --> DRAFT : Advisor requests changes
+    APPLIED --> NEEDS_CHANGES : Advisor requests changes
+    INTERVIEWING --> NEEDS_CHANGES : Advisor requests changes
+    OFFERED --> NEEDS_CHANGES : Advisor requests changes
+    NEEDS_CHANGES --> APPLIED : Student edits and resubmits
+    APPLIED --> APPROVED : Advisor approves
     INTERVIEWING --> APPROVED : Advisor approves
+    OFFERED --> APPROVED : Advisor approves
+    APPLIED --> REJECTED : Advisor rejects
     INTERVIEWING --> REJECTED : Advisor rejects
-    INTERVIEWING --> DRAFT : Advisor requests changes
+    OFFERED --> REJECTED : Advisor rejects
+    APPROVED --> [*]
+    REJECTED --> [*]
 ```
 
 ---
@@ -268,7 +272,8 @@ As a student or advisor, I want to browse a paginated list of applications with 
 ### Story 5: Update Application Details
 As a student, I want to edit an existing internship application, so that my records reflect the latest information.
 - **AC-5.1**: Only the owning student can edit; others receive HTTP 404.
-- **AC-5.2**: Applications with status `APPROVED` are locked and cannot be edited (HTTP 403 with "Approved applications cannot be modified").
+- **AC-5.2**: Applications with status `APPROVED` or `REJECTED` are locked and cannot be edited (HTTP 403 with "Approved or rejected applications cannot be modified").
+- **AC-5.4**: Saving an application in `NEEDS_CHANGES` resubmits it: its status becomes `APPLIED`.
 - **AC-5.3**: Valid updates return HTTP 200 with the updated record.
 
 ### Story 6: Delete Application
@@ -281,8 +286,9 @@ As a student, I want to delete an unwanted draft application, so that my tracker
 As an academic advisor, I want to post a review with comments and a formal decision on a student's application, so that the student receives academic feedback and approval status.
 - **AC-7.1**: Only `ADVISOR` role can create reviews; `STUDENT` attempts return HTTP 403.
 - **AC-7.2**: comment is required (≥ 10 characters); empty or short comments return HTTP 400.
-- **AC-7.3**: decision must be one of: `PENDING`, `NEEDS_CHANGES`, `APPROVED`, `REJECTED`.
-- **AC-7.4**: If decision is `APPROVED` or `REJECTED`, the parent application status is updated atomically in a database transaction.
+- **AC-7.3**: decision must be one of: `APPROVED`, `REJECTED`, `NEEDS_CHANGES`; anything else returns HTTP 400.
+- **AC-7.4**: The parent application status is set to the decision in the same database transaction as the review insert.
+- **AC-7.6**: Only applications in `APPLIED`, `INTERVIEWING` or `OFFERED` can be reviewed; others return HTTP 403.
 - **AC-7.5**: Successful review creation returns HTTP 201.
 
 ### Story 8: Access Control & IDOR Prevention
@@ -307,7 +313,7 @@ As a system user, I want to have the system enforce strict access boundaries, so
 | **Register / Login** | ✓ | ✓ | — |
 | **Create Application** | ✓ (own) | ✗ | 403 Forbidden |
 | **Read Application** | ✓ (own) | ✓ (all) | 404 Not Found (IDOR mitigated) |
-| **Update Application** | ✓ (own, not APPROVED) | ✗ | 404 (IDOR) / 403 (approved) |
+| **Update Application** | ✓ (own, not APPROVED/REJECTED) | ✗ | 404 (IDOR) / 403 (locked) |
 | **Delete Application** | ✓ (own, DRAFT/APPLIED, no reviews) | ✗ | 404 (IDOR) / 403 (has reviews or status) |
 | **Create Review** | ✗ | ✓ | 403 Forbidden |
 
