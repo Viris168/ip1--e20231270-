@@ -50,7 +50,7 @@
       "positionTitle": "DevOps & Cloud Intern",
       "location": "Phnom Penh, Cambodia",
       "stipend": 250,
-      "status": "OFFERED",
+      "status": "NEEDS_CHANGES",
       "startDate": "2026-07-01",
       "endDate": "2026-09-30",
       "createdAt": "2026-05-01T09:00:00Z",
@@ -94,15 +94,6 @@
       "comment": "The internship terms, duration (3 months), and technical focus match ITC I4-GIC graduation requirements. Approved.",
       "decision": "APPROVED",
       "createdAt": "2026-05-20T14:15:00Z"
-    },
-    {
-      "id": 102,
-      "applicationId": 2,
-      "advisorId": 99,
-      "advisorName": "Prof. CHUN Thavorac",
-      "comment": "Good technical scope. Keep me updated once the technical interview round concludes.",
-      "decision": "PENDING",
-      "createdAt": "2026-05-15T11:20:00Z"
     },
     {
       "id": 103,
