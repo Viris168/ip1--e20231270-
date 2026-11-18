@@ -10,7 +10,6 @@ export type ApplicationStatus =
   | 'REJECTED';
 
 export type ReviewDecision =
-  | 'PENDING'
   | 'NEEDS_CHANGES'
   | 'APPROVED'
   | 'REJECTED';

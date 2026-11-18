@@ -110,11 +110,9 @@ export const useApplicationStore = defineStore('applications', () => {
       decision
     });
 
-    // FR-REV-02 / FR-REV-03: a final decision also moves the application status.
+    // FR-REV-02 / FR-REV-03: every decision becomes the application status.
     // The mock needs two calls; the real API (M3) will do this in one transaction.
-    if (decision === 'APPROVED' || decision === 'REJECTED') {
-      await updateApplication(applicationId, { status: decision });
-    }
+    await updateApplication(applicationId, { status: decision });
     // Refresh without clearing `current`, so the page doesn't flash a loading state
     current.value = await applicationsService.get(applicationId);
     return review;

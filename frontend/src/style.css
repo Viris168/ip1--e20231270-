@@ -294,7 +294,6 @@ body {
 .badge-approved { background-color: var(--status-approved-bg); color: var(--status-approved-text); }
 .badge-rejected { background-color: var(--status-rejected-bg); color: var(--status-rejected-text); }
 .badge-needs_changes { background-color: var(--status-needs-changes-bg); color: var(--status-needs-changes-text); }
-.badge-pending { background-color: #f1f5f9; color: #475569; }
 
 /* Table */
 .table-wrapper {

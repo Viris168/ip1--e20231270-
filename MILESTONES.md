@@ -61,7 +61,7 @@ Git Tag: `m1`
 Git Tag: `m2`
 
 ### Checklist
-- [ ] API contract (Appendix B) and ERD in `docs/`
+- [x] API contract (Appendix B) and ERD in `docs/` — `docs/API.md`, `docs/ERD.md`
 - [ ] NestJS API with one module per resource (controller, service, DTOs)
 - [ ] Prisma schema, migrations and a seed script; PostgreSQL runs in Docker
 - [ ] CRUD endpoints for at least 3 entities, with server-side validation

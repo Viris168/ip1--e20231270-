@@ -172,7 +172,6 @@ async function handleSubmitReview() {
             <label class="form-label" for="review-decision">Decision *</label>
             <select id="review-decision" v-model="reviewDecision" class="form-select">
               <option value="APPROVED">APPROVED (Internship formally accredited)</option>
-              <option value="PENDING">PENDING (Under evaluation)</option>
               <option value="NEEDS_CHANGES">NEEDS_CHANGES (Additional documentation required)</option>
               <option value="REJECTED">REJECTED (Does not meet course criteria)</option>
             </select>
